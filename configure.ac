@@ -102,6 +102,18 @@ if test "x$GLIB_MKENUMS" = "xno"; then
 fi
 
 #
+# Gettext stuff
+#
+
+AM_GNU_GETTEXT([external])
+AM_GNU_GETTEXT_REQUIRE_VERSION([0.19.8])
+AM_CONDITIONAL([USE_NLS], [test "x${USE_NLS}" = "xyes"])
+
+GETTEXT_PACKAGE=AC_PACKAGE_NAME
+AC_SUBST(GETTEXT_PACKAGE)
+AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE], ["$GETTEXT_PACKAGE"], [Gettext package])
+
+#
 # Custom build options
 #
 
@@ -195,8 +207,10 @@ AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([
 Makefile
 src/Makefile
+src/resources/Makefile
 src/vapi/Makefile
 settings/Makefile
+po/Makefile.in
 ])
 
 AC_OUTPUT

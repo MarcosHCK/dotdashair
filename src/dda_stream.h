@@ -24,7 +24,7 @@ extern "C" {
 #endif // __cplusplus
 
 GType
-dds_stream_get_type ();
+dda_stream_get_type ();
 
 //G_DEFINE_AUTOPTR_CLEANUP_FUNC (DdaStream, g_object_unref)
 

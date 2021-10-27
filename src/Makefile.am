@@ -37,6 +37,7 @@ VOID=
 #
 
 SUBDIRS=\
+	resources \
 	vapi \
 	$(VOID)
 
@@ -65,9 +66,12 @@ libddagio_la_CFLAGS=\
 	$(GIO_CFLAGS) \
 	$(GLIB_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
+	-DLOCALEDIR=\"${localedir}\" \
 	-DSCHEMASDIR=\"${schemasdir}\" \
 	-DTOPBUILDDIR=\"${top_builddir}\" \
 	-DGAPPNAME=\"org.hck.${PACKAGE_NAME}\" \
+	-DGETTEXT_PACKAGE=\"${GETTEXT_PACKAGE}\" \
+	-DGRESNAME=\"/org/hck/${PACKAGE_NAME}\" \
 	-D__DDA_GIO_INSIDE__=1 \
 	-fstack-protector-strong \
 	-funwind-tables \
@@ -90,6 +94,7 @@ libddagio_la_LDFLAGS=\
 dotdashair_SOURCES=\
 	dda_application.c \
 	dda_main.c \
+	dda_window.vala \
 	$(VOID)
 dotdashair_CFLAGS=\
 	$(libddagio_la_CFLAGS) \
@@ -98,6 +103,7 @@ dotdashair_CFLAGS=\
 dotdashair_LDADD=\
 	$(libddagio_la_LIBADD) \
 	$(GTK_LIBS) \
+	resources/libbundle.la \
 	libddagio.la \
 	$(VOID)
 
@@ -109,6 +115,7 @@ VALA_PKG=\
 	gio-2.0 \
 	glib-2.0 \
 	gobject-2.0 \
+	gtk+-3.0 \
 	$(VOID)
 
 VALA_VAPIS=\
@@ -121,6 +128,7 @@ AM_VALAFLAGS=\
 	--abi-stability \
 	-D DEBUG=${DEBUG} \
 	-D DEVELOPER=${DEVELOPER} \
+	--gresources "${top_builddir}/src/resources/dda_resources.gresources.xml" \
 	$(addprefix --pkg , ${VALA_PKG}) \
 	$(addprefix --pkg , ${VALA_VAPIS}) \
 	$(VOID)

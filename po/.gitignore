@@ -15,17 +15,17 @@
 # along with dotdashair. If not, see <http://www.gnu.org/licenses/>.
 #
 
-*.[ao]
-*.la
-*.lai
-*.lo
-*.Po
-*.Plo
-*.Tpo
+*.gmo
+*.header
+*.mo
+*.sed
+*.sin
 
-dotdashair
-libddagio*.so*
-libmorse*.so*
+dotdashair.pot
 
-dda_settings.c
-dda_window.c
+Makefile.in
+Makefile.in.in
+POTFILES
+Rules-quot
+
+.intltool-merge-cache

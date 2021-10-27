@@ -17,5 +17,9 @@
 ACLOCAL_AMFLAGS=-I m4 ${ACLOCAL_FLAGS}
 
 SUBDIRS=\
+	settings \
 	src \
-	settings
+	po
+
+EXTRA_DIST=\
+	config.rpath

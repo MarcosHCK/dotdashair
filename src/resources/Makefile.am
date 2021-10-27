@@ -15,9 +15,6 @@
 # along with dotdashair. If not, see <http://www.gnu.org/licenses/>.
 #
 
-# Keep sync with src/Makefile.am
-schemasdir=${pkgdatadir}/schemas/
-
 #
 # Some variables
 #
@@ -33,21 +30,64 @@ EXTRA_DIST=
 VOID=
 
 #
-# GSettings cache
+# Resources
 #
 
-SCHEMAS=\
-	org.hck.dotdashair.gschema.xml \
+RES_RESOURCES=\
+	res/org.hck.${PACKAGE_NAME}.svg \
 	$(VOID)
 
-schemas_DATA=\
-	gschemas.compiled \
-	$(SCHEMAS) \
+UI_RESOURCES=\
+  ui/window.ui \
 	$(VOID)
 
-gschemas.compiled: $(SCHEMAS)
-	$(GLIB_COMPILE_SCHEMAS) ${abs_top_srcdir}/settings/
+#
+# Bundle
+#
 
+RESOURCES=\
+	$(RES_RESOURCES) \
+	$(UI_RESOURCES) \
+	$(VOID)
+
+EXTRA_DIST+=\
+	$(RESOURCES) \
+	$(VOID)
+	
 CLEANFILES=\
-	gschemas.compiled \
+	dda_resources.c \
+	dda_resources.h \
+	$(VOID)
+
+#
+# *.gresources.xml to *.c and *.h make target
+#
+
+dda_resources.c: dda_resources.gresources.xml $(RESOURCES)
+	$(GLIB_COMPILE_RESOURCES) --target=$@ --generate-source $<
+
+dda_resources.h: dda_resources.gresources.xml $(RESOURCES)
+	$(GLIB_COMPILE_RESOURCES) --target=$@ --generate-header $<
+
+#
+# Binaries and libraries
+#
+
+noinst_LTLIBRARIES=libbundle.la
+
+noinst_DATA=\
+	dda_resources.h \
+	$(VOID)
+
+libbundle_la_SOURCES=\
+	dda_resources.c \
+	$(VOID)
+libbundle_la_CFLAGS=\
+	$(GIO_CFLAGS) \
+	$(VOID)
+libbundle_la_LIBADD=\
+	$(GIO_LIBS) \
+	$(VOID)
+libbundle_la_LDFLAGS=\
+	-static \
 	$(VOID)

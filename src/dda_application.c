@@ -19,7 +19,9 @@
 #include <dda_application.h>
 #include <dda_macros.h>
 #include <dda_settings.h>
+#include <dda_window.h>
 #include <gtk/gtk.h>
+#include <resources/dda_resources.h>
 
 G_DEFINE_QUARK(dda-application-error-quark,
                dda_application_error);
@@ -41,6 +43,7 @@ struct _DdaApplication
   DdaSettings* dsettings;
   GSettings* gsettings;
   GSettings* msettings;
+  DdaWindow* window;
 };
 
 struct _DdaApplicationClass
@@ -66,6 +69,8 @@ dda_application_g_initable_iface_init_sync(GInitable* pself, GCancellable* cance
   GFile *current = NULL, *child = NULL;
   DdaSettings* dsettings = NULL;
   GSettings *gsettings, *msettings;
+  GdkPixbuf* pixbuf = NULL;
+  DdaWindow* window = NULL;
 
 /*
  * Little trick to get $PWD (GIO is awesome)
@@ -129,6 +134,59 @@ dda_application_g_initable_iface_init_sync(GInitable* pself, GCancellable* cance
     self->msettings = msettings;
   }
 
+/*
+ * Icons
+ *
+ */
+
+  pixbuf =
+  gdk_pixbuf_new_from_resource(GRESNAME "/res/" GAPPNAME ".svg", &tmp_err);
+  if G_UNLIKELY(tmp_err != NULL)
+  {
+    g_propagate_error(error, tmp_err);
+    goto_error();
+  }
+
+  gtk_window_set_default_icon(pixbuf);
+  g_object_unref(pixbuf);
+
+/*
+ * Main window
+ *
+ */
+
+  window =
+  dda_window_new();
+  if G_LIKELY(window != NULL)
+  {
+    g_object_ref_sink(window);
+    self->window = window;
+  }
+
+  gtk_window_set_application
+  (GTK_WINDOW(window),
+   GTK_APPLICATION(self));
+  gtk_window_present
+  (GTK_WINDOW(window));
+
+/*
+ * Just ensure resources are linked
+ * with main executable
+ *
+ */
+
+  GResource* resources =
+  dda_resources_get_resource();
+  if G_UNLIKELY(resources == NULL)
+  {
+    g_set_error_literal
+    (error,
+     DDA_APPLICATION_ERROR,
+     DDA_APPLICATION_ERROR_FAILED,
+     "Resources are not linked!\r\n");
+    g_assert_not_reached();
+  }
+
 _error_:
   _g_object_unref0(current);
   _g_object_unref0(child);
@@ -178,6 +236,7 @@ static void
 dda_application_class_dispose(GObject* pself)
 {
   DdaApplication* self = DDA_APPLICATION(pself);
+  g_clear_object(&(self->window));
   g_clear_object(&(self->msettings));
   g_clear_object(&(self->gsettings));
   g_clear_object(&(self->dsettings));

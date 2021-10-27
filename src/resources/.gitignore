@@ -23,9 +23,7 @@
 *.Plo
 *.Tpo
 
-dotdashair
-libddagio*.so*
-libmorse*.so*
+*.ui~
 
-dda_settings.c
-dda_window.c
+dda_resources.c
+dda_resources.h

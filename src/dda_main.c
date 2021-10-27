@@ -17,9 +17,15 @@
  */
 #include <config.h>
 #include <dda_application.h>
+#include <glib/gi18n-lib.h>
 
 int main(int argc, char* argv[])
 {
+  setlocale(LC_ALL, "");
+  bindtextdomain(GETTEXT_PACKAGE, LOCALEDIR);
+  bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
+  textdomain(GETTEXT_PACKAGE);
+
   GApplication* app = NULL;
   int status = 0;
 
