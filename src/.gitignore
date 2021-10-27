@@ -26,3 +26,5 @@
 dotdashair
 libddagio*.so*
 libmorse*.so*
+
+dda_settings.c

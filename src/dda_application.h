@@ -19,6 +19,29 @@
 #define __DDA_APPLICATION__ 1
 #include <gio/gio.h>
 
+/**
+ * DDA_APPLICATION_ERROR:
+ *
+ * Error domain for DDA_APPLICATION. Errors in this domain will be from the #DdaApplicationError enumeration.
+ * See #GError for more information on error domains.
+ */
+#define DDA_APPLICATION_ERROR (dda_application_error_quark())
+
+/**
+ * DdaApplicationError:
+ * @DDA_APPLICATION_ERROR_FAILED: generic error condition.
+ * @DDA_APPLICATION_ERROR_GSETTINGS_INIT: main settings initialization error.
+ *
+ * Error code returned by DdaApplication API.
+ * Note that %DDA_APPLICATION_ERROR_FAILED is here only for compatibility with
+ * error domain definition paradigm as defined on GLib documentation.
+ */
+typedef enum
+{
+  DDA_APPLICATION_ERROR_FAILED,
+  DDA_APPLICATION_ERROR_GSETTINGS_INIT,
+} DdaApplicationError;
+
 #define DDA_TYPE_APPLICATION             (dda_application_get_type())
 #define DDA_APPLICATION(object)          (G_TYPE_CHECK_INSTANCE_CAST((object), DDA_TYPE_APPLICATION, DdaApplication))
 #define DDA_APPLICATION_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST((klass), DDA_TYPE_APPLICATION, DdaApplicationClass))
@@ -34,11 +57,15 @@ typedef struct _DdaApplicationClass   DdaApplicationClass;
 extern "C" {
 #endif // __cplusplus
 
+GQuark
+dda_application_error_quark ();
 GType
-dda_application_get_type();
+dda_application_get_type ();
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (DdaApplication, g_object_unref)
 
 #if __cplusplus
 }
-#endif
+#endif // __cplusplus
 
 #endif // __DDA_APPLICATION__

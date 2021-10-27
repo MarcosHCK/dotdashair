@@ -57,6 +57,7 @@ pkglib_LTLIBRARIES=libddagio.la
 bin_PROGRAMS=dotdashair
 
 libddagio_la_SOURCES=\
+	dda_settings.vala \
 	dda_stream.c \
 	$(VOID)
 libddagio_la_CFLAGS=\
@@ -92,9 +93,11 @@ dotdashair_SOURCES=\
 	$(VOID)
 dotdashair_CFLAGS=\
 	$(libddagio_la_CFLAGS) \
+	$(GTK_CFLAGS) \
 	$(VOID)
 dotdashair_LDADD=\
 	$(libddagio_la_LIBADD) \
+	$(GTK_LIBS) \
 	libddagio.la \
 	$(VOID)
 
@@ -110,8 +113,6 @@ VALA_PKG=\
 
 VALA_VAPIS=\
 	config \
-	dds \
-	deus \
 	$(VOID)
 
 AM_VALAFLAGS=\

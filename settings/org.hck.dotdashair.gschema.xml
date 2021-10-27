@@ -20,8 +20,13 @@ along with dotdashair. If not, see <http://www.gnu.org/licenses/>.
 Author: MarcosHCK
 -->
 <schemalist>
-  <schema path="/org/hck/dotdashair/" id="org.hck.dotdashair">
+  <schema path="/org/hck/dotdashair/" id="org.hck.dotdashair.gui">
     <key name="fullscreen" type="b">
+      <default>false</default>
+    </key>
+  </schema>
+  <schema path="/org/hck/dotdashair/" id="org.hck.dotdashair.morse">
+    <key name="borderless" type="b">
       <default>false</default>
     </key>
   </schema>

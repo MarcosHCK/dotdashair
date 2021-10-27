@@ -18,4 +18,18 @@
 #ifndef __DDA_STREAM__
 #define __DDA_STREAM__ 1
 #include <gio/gio.h>
+
+#if __cplusplus
+extern "C" {
+#endif // __cplusplus
+
+GType
+dds_stream_get_type ();
+
+//G_DEFINE_AUTOPTR_CLEANUP_FUNC (DdaStream, g_object_unref)
+
+#if __cplusplus
+}
+#endif // __cplusplus
+
 #endif // __DDA_STREAM__
