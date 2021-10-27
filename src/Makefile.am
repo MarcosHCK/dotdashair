@@ -16,7 +16,7 @@
 #
 
 # Keep sync with src/Makefile.am
-schemasdir=${pkgdatadir}/schemas/
+schemasdir=${pkgdatadir}/schemas
 
 #
 # Some variables
@@ -47,7 +47,11 @@ SUBDIRS=\
 
 EXTRA_DIST+=\
 	dda_application.h \
-	dda_stream.h \
+	dda_input_stream.h \
+	dda_macros.h \
+	dda_morse_charset.h \
+	dda_morse_converter.h \
+	dda_output_stream.h \
 	$(VOID)
 
 #
@@ -58,8 +62,10 @@ pkglib_LTLIBRARIES=libddagio.la
 bin_PROGRAMS=dotdashair
 
 libddagio_la_SOURCES=\
-	dda_settings.vala \
-	dda_stream.c \
+	dda_input_stream.c \
+	dda_morse_charset.c \
+	dda_morse_converter.c \
+	dda_output_stream.c \
 	$(VOID)
 libddagio_la_CFLAGS=\
 	$(CGLM_CFLAGS) \
@@ -94,6 +100,7 @@ libddagio_la_LDFLAGS=\
 dotdashair_SOURCES=\
 	dda_application.c \
 	dda_main.c \
+	dda_settings.vala \
 	dda_window.vala \
 	$(VOID)
 dotdashair_CFLAGS=\

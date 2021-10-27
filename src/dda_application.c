@@ -18,6 +18,7 @@
 #include <config.h>
 #include <dda_application.h>
 #include <dda_macros.h>
+#include <dda_morse_converter.h>
 #include <dda_settings.h>
 #include <dda_window.h>
 #include <gtk/gtk.h>
@@ -43,6 +44,12 @@ struct _DdaApplication
   DdaSettings* dsettings;
   GSettings* gsettings;
   GSettings* msettings;
+
+  /*<private>*/
+  DdaMorseCharset* charset;
+  DdaMorseConverter* converter;
+
+  /*<private>*/
   DdaWindow* window;
 };
 
@@ -69,6 +76,8 @@ dda_application_g_initable_iface_init_sync(GInitable* pself, GCancellable* cance
   GFile *current = NULL, *child = NULL;
   DdaSettings* dsettings = NULL;
   GSettings *gsettings, *msettings;
+  DdaMorseCharset* charset = NULL;
+  DdaMorseConverter* converter = NULL;
   GdkPixbuf* pixbuf = NULL;
   DdaWindow* window = NULL;
 
@@ -135,6 +144,45 @@ dda_application_g_initable_iface_init_sync(GInitable* pself, GCancellable* cance
   }
 
 /*
+ * Load charset and create
+ * converter
+ *
+ */
+
+#if DEVELOPER == 1
+  g_set_object(&child, g_file_get_child(current, "settings/default_charset.cfg"));
+  charset =
+  dda_morse_charset_new(child, cancellable, &tmp_err);
+#else
+  gchar* charset_filename = NULL;
+
+  charset_filename =
+  g_settings_get_string
+  (msettings,
+   "charset-file");
+  g_set_object
+  (&child,
+   g_file_new_for_path
+   (charset_filename));
+  _g_free0(charset_filename);
+
+  charset =
+  dda_morse_charset_new(child, cancellable, &tmp_err);
+#endif // DEVELOPER
+  if G_UNLIKELY(tmp_err != NULL)
+  {
+    g_propagate_error(error, tmp_err);
+    goto_error();
+  }
+  else
+  {
+    self->charset = charset;
+  }
+
+  self->converter = converter = (DdaMorseConverter*)
+  dda_morse_converter_new(DDA_MORSE_CONVERTER_DIRECTION_NONE, charset);
+
+/*
  * Icons
  *
  */
@@ -199,11 +247,76 @@ dda_application_g_initable_iface_init(GInitableIface* iface)
   iface->init = dda_application_g_initable_iface_init_sync;
 }
 
+static gboolean
+test_converter(DdaApplication* self, GCancellable* cancellable, GError** error)
+{
+  GError* tmp_err = NULL;
+  gboolean success = TRUE;
+
+  GConverter* converter = NULL;
+  GOutputStream* stdout_ = NULL;
+  GOutputStream* converter_ = NULL;
+  GFile* file = NULL;
+
+  file = g_file_new_for_path("/dev/stdout");
+
+  stdout_ = (gpointer)
+  g_file_append_to(file, G_FILE_CREATE_NONE, cancellable, &tmp_err);
+  _g_object_unref0(file);
+  if G_UNLIKELY(tmp_err != NULL)
+  {
+    g_propagate_error(error, tmp_err);
+    goto_error();
+  }
+
+  converter =
+  G_CONVERTER(g_object_ref(self->converter));
+
+  converter_ =
+  g_object_new
+  (G_TYPE_CONVERTER_OUTPUT_STREAM,
+   "base-stream", stdout_,
+   "close-base-stream", TRUE,
+   "converter", converter,
+   NULL);
+  _g_object_unref0(converter);
+  _g_object_unref0(stdout_);
+
+  success =
+#if 0
+  g_output_stream_printf(converter_, NULL, cancellable, &tmp_err, "marcos antonio");
+#else
+  g_output_stream_printf(converter_, NULL, cancellable, &tmp_err, "--,.-,.-.,-.-.,---,..., ,.-,-.,-,---,-.,..,---");
+#endif
+  if G_UNLIKELY(tmp_err != NULL)
+  {
+    g_propagate_error(error, tmp_err);
+    goto_error();
+  }
+
+  success =
+  g_output_stream_close(converter_, cancellable, &tmp_err);
+  _g_object_unref0(converter_);
+  if G_UNLIKELY(tmp_err != NULL)
+  {
+    g_propagate_error(error, tmp_err);
+    goto_error();
+  }
+
+_error_:
+  _g_object_unref0(converter_);
+  _g_object_unref0(converter);
+  _g_object_unref0(stdout_);
+  _g_object_unref0(file);
+return success;
+}
+
 static void
 dda_application_class_activate(GApplication* pself)
 {
-  DdaApplication* self = (DdaApplication*) self;
+  DdaApplication* self = (DdaApplication*) pself;
   GError* tmp_err = NULL;
+  gboolean success = TRUE;
 
 /*
  * Initialize
@@ -220,8 +333,22 @@ dda_application_class_activate(GApplication* pself)
      g_quark_to_string(tmp_err->domain),
      tmp_err->code,
      tmp_err->message);
-    g_error_free(tmp_err);
+    _g_error_free0(tmp_err);
     g_assert_not_reached();
+  }
+
+  success =
+  test_converter(self, NULL, &tmp_err);
+  if G_UNLIKELY(tmp_err != NULL)
+  {
+    g_critical
+    ("(%s: %i): %s: %i: %s\r\n",
+     G_STRFUNC,
+     __LINE__,
+     g_quark_to_string(tmp_err->domain),
+     tmp_err->code,
+     tmp_err->message);
+    _g_error_free0(tmp_err);
   }
 }
 
@@ -232,14 +359,22 @@ dda_application_class_finalize(GObject* pself)
 G_OBJECT_CLASS(dda_application_parent_class)->finalize(pself);
 }
 
+#if DEVELOPER == 1
+# define _clear_object0(var) ((var == NULL) ? NULL : (var = (g_assert_finalize_object (var), NULL)))
+#else // DEVELOPER
+# define _clear_object0(var) (_g_object_unref0 ((var)))
+#endif // DEVELOPER
+
 static void
 dda_application_class_dispose(GObject* pself)
 {
   DdaApplication* self = DDA_APPLICATION(pself);
-  g_clear_object(&(self->window));
-  g_clear_object(&(self->msettings));
-  g_clear_object(&(self->gsettings));
   g_clear_object(&(self->dsettings));
+  g_clear_object(&(self->gsettings));
+  g_clear_object(&(self->msettings));
+  g_clear_object(&(self->charset));
+  g_clear_object(&(self->converter));
+  g_clear_object(&(self->window));
 G_OBJECT_CLASS(dda_application_parent_class)->dispose(pself);
 }
 

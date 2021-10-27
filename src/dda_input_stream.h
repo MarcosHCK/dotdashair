@@ -15,5 +15,21 @@
  *  along with dotdashair.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#include <config.h>
-#include <dda_stream.h>
+#ifndef __DDA_INPUT_STREAM__
+#define __DDA_INPUT_STREAM__ 1
+#include <gio/gio.h>
+
+#if __cplusplus
+extern "C" {
+#endif // __cplusplus
+
+GType
+dda_input_stream_get_type ();
+
+//G_DEFINE_AUTOPTR_CLEANUP_FUNC (DdaInputStream, g_object_unref)
+
+#if __cplusplus
+}
+#endif // __cplusplus
+
+#endif // __DDA_INPUT_STREAM__

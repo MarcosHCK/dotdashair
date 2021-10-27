@@ -16,7 +16,10 @@
 #
 
 # Keep sync with src/Makefile.am
-schemasdir=${pkgdatadir}/schemas/
+charsetsdir=${pkgdatadir}/charsets
+
+# Keep sync with src/Makefile.am
+schemasdir=${pkgdatadir}/schemas
 
 #
 # Some variables
@@ -33,6 +36,27 @@ EXTRA_DIST=
 VOID=
 
 #
+# Charsets
+#
+
+charsets_DATA=\
+	default_charset.cfg \
+	$(VOID)
+
+#
+# Schemas
+#
+
+SCHEMAS_CLFAGS=\
+	-D "CHARSETSDIR=${charsetsdir}" \
+	$(VOID)
+
+SUFFIXES=.xml.in .xml
+
+.xml.in.xml:
+	m4 $(SCHEMAS_CLFAGS) $< > $@
+
+#
 # GSettings cache
 #
 
@@ -46,8 +70,9 @@ schemas_DATA=\
 	$(VOID)
 
 gschemas.compiled: $(SCHEMAS)
-	$(GLIB_COMPILE_SCHEMAS) ${abs_top_srcdir}/settings/
+	$(GLIB_COMPILE_SCHEMAS) ${top_builddir}/settings/
 
 CLEANFILES=\
 	gschemas.compiled \
+	org.hck.dotdashair.gschema.xml \
 	$(VOID)

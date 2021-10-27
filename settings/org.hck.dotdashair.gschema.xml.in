@@ -26,8 +26,8 @@ Author: MarcosHCK
     </key>
   </schema>
   <schema path="/org/hck/dotdashair/" id="org.hck.dotdashair.morse">
-    <key name="borderless" type="b">
-      <default>false</default>
+    <key name="charset-file" type="s">
+      <default>'CHARSETSDIR/default_charset.cfg'</default>
     </key>
   </schema>
 </schemalist>

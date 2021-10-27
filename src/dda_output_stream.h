@@ -15,8 +15,8 @@
  *  along with dotdashair.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#ifndef __DDA_STREAM__
-#define __DDA_STREAM__ 1
+#ifndef __DDA_OUTPUT_STREAM__
+#define __DDA_OUTPUT_STREAM__ 1
 #include <gio/gio.h>
 
 #if __cplusplus
@@ -24,12 +24,12 @@ extern "C" {
 #endif // __cplusplus
 
 GType
-dda_stream_get_type ();
+dda_output_stream_get_type ();
 
-//G_DEFINE_AUTOPTR_CLEANUP_FUNC (DdaStream, g_object_unref)
+//G_DEFINE_AUTOPTR_CLEANUP_FUNC (DdaOutputStream, g_object_unref)
 
 #if __cplusplus
 }
 #endif // __cplusplus
 
-#endif // __DDA_STREAM__
+#endif // __DDA_OUTPUT_STREAM__

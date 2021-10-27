@@ -19,6 +19,7 @@
 #define __DDA_MACROS__
 
 #define _g_free0(var)             ((var == NULL) ? NULL : (var = (g_free (var), NULL)))
+#define _g_error_free0(var)       ((var == NULL) ? NULL : (var = (g_error_free (var), NULL)))
 #define _g_object_ref0(var)       ((var == NULL) ? NULL : (var = (g_object_ref (var))))
 #define _g_object_ref_sink0(var)  ((var == NULL) ? NULL : (var = (g_object_ref_sink (var))))
 #define _g_object_unref0(var)     ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
