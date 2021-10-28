@@ -180,7 +180,7 @@ dda_application_g_initable_iface_init_sync(GInitable* pself, GCancellable* cance
   }
 
   self->converter = converter = (DdaMorseConverter*)
-  dda_morse_converter_new(DDA_MORSE_CONVERTER_DIRECTION_NONE, charset);
+  dda_morse_converter_new(DDA_MORSE_CONVERTER_DIRECTION_CODE2CHAR, charset);
 
 /*
  * Icons
@@ -247,70 +247,6 @@ dda_application_g_initable_iface_init(GInitableIface* iface)
   iface->init = dda_application_g_initable_iface_init_sync;
 }
 
-static gboolean
-test_converter(DdaApplication* self, GCancellable* cancellable, GError** error)
-{
-  GError* tmp_err = NULL;
-  gboolean success = TRUE;
-
-  GConverter* converter = NULL;
-  GOutputStream* stdout_ = NULL;
-  GOutputStream* converter_ = NULL;
-  GFile* file = NULL;
-
-  file = g_file_new_for_path("/dev/stdout");
-
-  stdout_ = (gpointer)
-  g_file_append_to(file, G_FILE_CREATE_NONE, cancellable, &tmp_err);
-  _g_object_unref0(file);
-  if G_UNLIKELY(tmp_err != NULL)
-  {
-    g_propagate_error(error, tmp_err);
-    goto_error();
-  }
-
-  converter =
-  G_CONVERTER(g_object_ref(self->converter));
-
-  converter_ =
-  g_object_new
-  (G_TYPE_CONVERTER_OUTPUT_STREAM,
-   "base-stream", stdout_,
-   "close-base-stream", TRUE,
-   "converter", converter,
-   NULL);
-  _g_object_unref0(converter);
-  _g_object_unref0(stdout_);
-
-  success =
-#if 1
-  g_output_stream_printf(converter_, NULL, cancellable, &tmp_err, "marcos antonio");
-#else
-  g_output_stream_printf(converter_, NULL, cancellable, &tmp_err, "--,.-,.-.,-.-.,---,..., ,.-,-.,-,---,-.,..,---");
-#endif
-  if G_UNLIKELY(tmp_err != NULL)
-  {
-    g_propagate_error(error, tmp_err);
-    goto_error();
-  }
-
-  success =
-  g_output_stream_close(converter_, cancellable, &tmp_err);
-  _g_object_unref0(converter_);
-  if G_UNLIKELY(tmp_err != NULL)
-  {
-    g_propagate_error(error, tmp_err);
-    goto_error();
-  }
-
-_error_:
-  _g_object_unref0(converter_);
-  _g_object_unref0(converter);
-  _g_object_unref0(stdout_);
-  _g_object_unref0(file);
-return success;
-}
-
 static void
 dda_application_class_activate(GApplication* pself)
 {
@@ -323,6 +259,7 @@ dda_application_class_activate(GApplication* pself)
  *
  */
 
+  success =
   g_initable_init(G_INITABLE(pself), NULL, &tmp_err);
   if G_UNLIKELY(tmp_err != NULL)
   {
@@ -335,20 +272,6 @@ dda_application_class_activate(GApplication* pself)
      tmp_err->message);
     _g_error_free0(tmp_err);
     g_assert_not_reached();
-  }
-
-  success =
-  test_converter(self, NULL, &tmp_err);
-  if G_UNLIKELY(tmp_err != NULL)
-  {
-    g_critical
-    ("(%s: %i): %s: %i: %s\r\n",
-     G_STRFUNC,
-     __LINE__,
-     g_quark_to_string(tmp_err->domain),
-     tmp_err->code,
-     tmp_err->message);
-    _g_error_free0(tmp_err);
   }
 }
 

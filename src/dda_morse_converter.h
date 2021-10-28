@@ -37,6 +37,8 @@
  * @DDA_MORSE_CONVERTER_ERROR_UNKNOWN_CHARACTER: unknown character present
  * on input, usually a not ASCII letter (remember morse code only defines
  * ASCII Latin code page).
+ * DDA_MORSE_CONVERTER_ERROR_UNKNOWN_CODE: unknown Morse code present on
+ * input, usually a malformed code.
  *
  * Error code returned by DdaMorseConverter API.
  * Note that %DDA_MORSE_CONVERTER_ERROR_FAILED is here only for compatibility with
@@ -48,6 +50,7 @@ typedef enum
   DDA_MORSE_CONVERTER_ERROR_UNGUESSABLE_INPUT,
   DDA_MORSE_CONVERTER_ERROR_NOT_UTF8_INPUT,
   DDA_MORSE_CONVERTER_ERROR_UNKNOWN_CHARACTER,
+  DDA_MORSE_CONVERTER_ERROR_UNKNOWN_CODE,
 } DdaMorseConverterError;
 
 #define DDA_TYPE_MORSE_CONVERTER_DIRECTION (dda_morse_converter_direction_get_type ())
