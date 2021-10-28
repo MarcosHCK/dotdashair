@@ -22,6 +22,7 @@ Author: MarcosHCK
 <gresources>
   <gresource prefix="/org/hck/dotdashair/">
     <file preprocess="xml-stripblanks">res/org.hck.dotdashair.svg</file>
+    <file preprocess="xml-stripblanks">ui/textbox.ui</file>
     <file preprocess="xml-stripblanks">ui/window.ui</file>
   </gresource>
 </gresources>

@@ -28,4 +28,5 @@ libddagio*.so*
 libmorse*.so*
 
 dda_settings.c
+dda_textbox.c
 dda_window.c

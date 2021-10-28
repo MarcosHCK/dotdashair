@@ -19,6 +19,7 @@
 #include <dda_macros.h>
 #include <dda_morse_charset.h>
 #include <dda_morse_converter.h>
+#include <dda_morse_converter_private.h>
 
 G_DEFINE_QUARK(dda-morse-converter-error-quark,
                dda_morse_converter_error);
@@ -27,16 +28,6 @@ G_DEFINE_QUARK(dda-morse-converter-error-quark,
 
 static void
 dda_morse_converter_g_converter_iface_init(GConverterIface* iface);
-
-typedef GConverterResult (*MorseConversor) (DdaMorseConverter  *self,
-                                            const void         *inbuf,
-                                            gsize               inbuf_size,
-                                            void               *outbuf,
-                                            gsize               outbuf_size,
-                                            GConverterFlags     flags,
-                                            gsize              *bytes_read,
-                                            gsize              *bytes_written,
-                                            GError            **error);
 
 /*
  * Enumeration types
@@ -71,65 +62,6 @@ return g_enum_type_id__volatile;
  *
  */
 
-struct _DdaMorseConverter
-{
-  GObject parent_instance;
-
-  /*<private>*/
-  DdaMorseCharset* charset;                       /* charset helper                                               */
-  DdaMorseConverterDirection direction_default;   /* default conversion direction                                 */
-  gboolean suppress_unknown_code_error;           /* self explicative                                             */
-
-  /*<private>*/
-  DdaMorseConverterDirection direction;           /* current conversion direction                                 */
-  MorseConversor conversor;                       /* conversion function for current direction                    */
-  GString* partial;                               /* partial data storage                                         */
-  GString* partial2;                              /* partial data storage used by code to char routine            */
-  GError* partial_error[2];                       /* partial errors (note that converter architecture makes my    */
-                                                  /* delay in-conversion error throwing until all internal state  */
-                                                  /* is flushed, process which may throw an error for it own)     */
-};
-
-struct _DdaMorseConverterClass
-{
-  GObjectClass parent_class;
-
-  /*<private>*/
-  GRegex* ltt2mrs;
-  GRegex* mrschck;
-};
-
-#define push_partial_error(self) \
-  G_STMT_START { \
-    if((self)->partial_error[0] == NULL) \
-      g_warning("(%s: %i): pushing a non existent error\r\n", G_STRFUNC, __LINE__); \
-    if((self)->partial_error[1] != NULL) \
-    { \
-      g_warning("(%s: %i): there was an error already on error stack\r\n", G_STRFUNC, __LINE__); \
-      _g_error_free0((self)->partial_error[1]); \
-    } \
-    (self)->partial_error[1] = g_steal_pointer(&( (self)->partial_error[0] )); \
-  } G_STMT_END
-#define pop_partial_error(self) \
-  G_STMT_START { \
-    if((self)->partial_error[1] == NULL) \
-      g_warning("(%s: %i): poping a non existent error\r\n", G_STRFUNC, __LINE__); \
-    if((self)->partial_error[0] != NULL) \
-    { \
-      g_warning("(%s: %i): there was an error already on error stack\r\n", G_STRFUNC, __LINE__); \
-      _g_error_free0((self)->partial_error[0]); \
-    } \
-    (self)->partial_error[0] = g_steal_pointer(&( (self)->partial_error[1] )); \
-  } G_STMT_END
-#define has_partial_error(self, level) \
-  (G_UNLIKELY ((self)->partial_error[(level)] != NULL))
-#define get_partial_error(self, level) \
-  (g_steal_pointer(&( (self)->partial_error[(level)] )))
-#define propagate_partial_error(self, level) \
-  G_STMT_START { \
-    g_propagate_error(error, get_partial_error(self, level)); \
-  } G_STMT_END
-
 enum
 {
   prop_0,
@@ -150,348 +82,6 @@ G_DEFINE_TYPE_WITH_CODE
  (G_TYPE_CONVERTER,
   dda_morse_converter_g_converter_iface_init));
 
-static gboolean
-write_partial(DdaMorseConverter* self, gpointer outbuf, gsize n_outbuf, gsize* n_outbuf_wrote, GError** error)
-{
-  GString* partial = NULL;
-  partial = self->partial;
-
-  if(partial->len > 0)
-  {
-    if(partial->len > n_outbuf)
-    {
-      g_set_error_literal
-      (error,
-       G_IO_ERROR,
-       G_IO_ERROR_NO_SPACE,
-       "Not enough space!\r\n");
-      return FALSE;
-    }
-    else
-    {
-      gsize sz = partial->len;
-      memcpy(outbuf, partial->str, sz);
-      g_string_erase(partial, 0, sz);
-      *n_outbuf_wrote = sz;
-    }
-  }
-return TRUE;
-}
-
-static GConverterResult
-conversor_char2code(DdaMorseConverter  *self,
-                    gconstpointer       inbuf,
-                    gsize               n_inbuf,
-                    gpointer            outbuf,
-                    gsize               n_outbuf,
-                    GConverterFlags     flags,
-                    gsize              *n_inbuf_read,
-                    gsize              *n_outbuf_wrote,
-                    GError            **error)
-{
-  gboolean success = TRUE;
-  GError* tmp_err = NULL;
-  GString* partial = NULL;
-
-  partial = self->partial;
-  *n_outbuf_wrote = 0;
-  *n_inbuf_read = 0;
-
-/*
- * Check last partial error
- *
- */
-
-  if(has_partial_error(self, 0))
-  {
-    propagate_partial_error(self, 0);
-    return G_CONVERTER_ERROR;
-  }
-
-/*
- * Do some work
- *
- */
-
-  if(   flags & G_CONVERTER_FLUSH
-     || has_partial_error(self, 1))
-  {
-  /*
-   * Flush partial, if some
-   *
-   */
-
-    success =
-    write_partial(self, outbuf, n_outbuf, n_outbuf_wrote, &tmp_err);
-    if G_UNLIKELY(tmp_err != NULL)
-    {
-      g_propagate_error(error, tmp_err);
-      return G_CONVERTER_ERROR;
-    }
-
-    success =
-    has_partial_error(self, 1) == FALSE;
-    if G_UNLIKELY(success == FALSE)
-    {
-      pop_partial_error(self);
-      return G_CONVERTER_CONVERTED;
-    }
-  }
-  else
-  {
-  /*
-   * Process input
-   *
-   */
-
-    gunichar unichar;
-    const gchar *input, *last;
-    const DdaMorseEntity* entity;
-    guint i;
-
-    success =
-    g_utf8_validate_len(inbuf, n_inbuf, &last);
-    if G_UNLIKELY(success == FALSE)
-    {
-      g_set_error_literal
-      (error,
-       DDA_MORSE_CONVERTER_ERROR,
-       DDA_MORSE_CONVERTER_ERROR_NOT_UTF8_INPUT,
-       "Invalid input data (not UTF-8 sequence)\r\n");
-      return G_CONVERTER_ERROR;
-    }
-
-    for(input = inbuf;
-        input != NULL && input[0] != 0;
-        input = g_utf8_next_char(input),
-        (*n_inbuf_read)++)
-    {
-      unichar = g_utf8_get_char(input);
-
-      entity =
-      ds_morse_charset_get_entity_by_char(self->charset, unichar);
-      if G_UNLIKELY(entity == NULL)
-      {
-        g_set_error
-        (&(self->partial_error[0]),
-         DDA_MORSE_CONVERTER_ERROR,
-         DDA_MORSE_CONVERTER_ERROR_UNKNOWN_CHARACTER,
-         "Unknown character '0x%x'\r\n",
-         unichar);
-
-        success =
-        write_partial(self, outbuf, n_outbuf, n_outbuf_wrote, &tmp_err);
-        if G_UNLIKELY(tmp_err != NULL)
-        {
-          g_propagate_error(error, tmp_err);
-          push_partial_error(self);
-          return G_CONVERTER_ERROR;
-        }
-
-        return G_CONVERTER_CONVERTED;
-      }
-      else
-      {
-        if(input != inbuf)
-        g_string_append_c(partial, ',');
-        g_string_append_len(partial, entity->code, entity->n_code);
-      }
-    }
-
-    success =
-    write_partial(self, outbuf, n_outbuf, n_outbuf_wrote, &tmp_err);
-    if G_UNLIKELY(tmp_err != NULL)
-    {
-      g_propagate_error(error, tmp_err);
-      return G_CONVERTER_ERROR;
-    }
-  }
-
-_error_:
-  return
-  (flags & G_CONVERTER_INPUT_AT_END)
-  ? G_CONVERTER_FINISHED
-  : G_CONVERTER_CONVERTED;
-}
-
-static GConverterResult
-conversor_code2char(DdaMorseConverter  *self,
-                    gconstpointer       inbuf,
-                    gsize               n_inbuf,
-                    gpointer            outbuf,
-                    gsize               n_outbuf,
-                    GConverterFlags     flags,
-                    gsize              *n_inbuf_read,
-                    gsize              *n_outbuf_wrote,
-                    GError            **error)
-{
-  gboolean success = TRUE;
-  GError* tmp_err = NULL;
-  GString* partial = NULL;
-  GString* partial2 = NULL;
-
-  partial = self->partial;
-  partial2 = self->partial2;
-  *n_outbuf_wrote = 0;
-  *n_inbuf_read = 0;
-
-/*
- * Check last partial error
- *
- */
-
-  if(has_partial_error(self, 0))
-  {
-    propagate_partial_error(self, 0);
-    return G_CONVERTER_ERROR;
-  }
-
-/*
- * Do some work
- *
- */
-
-  if(   flags & G_CONVERTER_FLUSH
-     || has_partial_error(self, 1))
-  {
-  /*
-   * Flush partial, if some
-   *
-   */
-
-    success =
-    write_partial(self, outbuf, n_outbuf, n_outbuf_wrote, &tmp_err);
-    if G_UNLIKELY(tmp_err != NULL)
-    {
-      g_propagate_error(error, tmp_err);
-      return G_CONVERTER_ERROR;
-    }
-
-    success =
-    has_partial_error(self, 1) == FALSE;
-    if G_UNLIKELY(success == FALSE)
-    {
-      pop_partial_error(self);
-      return G_CONVERTER_CONVERTED;
-    }
-  }
-  else
-  {
-  /*
-   * Process input
-   *
-   */
-
-    gunichar unichar;
-    const gchar *input, *last;
-    const DdaMorseEntity* entity;
-    guint i;
-
-    success =
-    g_utf8_validate_len(inbuf, n_inbuf, &last);
-    if G_UNLIKELY(success == FALSE)
-    {
-      g_set_error_literal
-      (error,
-       DDA_MORSE_CONVERTER_ERROR,
-       DDA_MORSE_CONVERTER_ERROR_NOT_UTF8_INPUT,
-       "Invalid input data (not UTF-8 sequence)\r\n");
-      return G_CONVERTER_ERROR;
-    }
-
-    for(input = inbuf;
-        input != NULL && input[0] != 0;
-        input = g_utf8_next_char(input),
-        (*n_inbuf_read)++)
-    {
-      unichar = g_utf8_get_char(input);
-
-      switch(unichar)
-      {
-      case L'-':
-        G_GNUC_FALLTHROUGH;
-      case L'.':
-        G_GNUC_FALLTHROUGH;
-      case L' ':
-        g_string_append_unichar(partial2, unichar);
-      break;
-      case L',':
-        {
-          entity =
-          ds_morse_charset_get_entity_by_code(self->charset, partial2->str);
-          if G_UNLIKELY(entity == NULL)
-          {
-            if(self->suppress_unknown_code_error)
-            {
-              g_string_append_c(partial, '*');
-              g_string_erase(partial2, 0, partial2->len);
-            }
-            else
-            {
-              g_set_error
-              (error,
-               DDA_MORSE_CONVERTER_ERROR,
-               DDA_MORSE_CONVERTER_ERROR_UNKNOWN_CODE,
-               "Unknown morse code '%s'\r\n",
-               partial2->str);
-              g_string_erase(partial2, 0, partial2->len);
-              return G_CONVERTER_ERROR;
-            }
-          }
-          else
-          {
-            g_string_erase(partial2, 0, partial2->len);
-            g_string_append_unichar(partial, entity->char_);
-          }
-        }
-        break;
-      default:
-        g_set_error
-        (&(self->partial_error[0]),
-         DDA_MORSE_CONVERTER_ERROR,
-         DDA_MORSE_CONVERTER_ERROR_UNKNOWN_CHARACTER,
-         "Unknown character '0x%x'\r\n",
-         unichar);
-        success =
-        write_partial(self, outbuf, n_outbuf, n_outbuf_wrote, &tmp_err);
-        if G_UNLIKELY(tmp_err != NULL)
-        {
-          g_propagate_error(error, tmp_err);
-          push_partial_error(self);
-          return G_CONVERTER_ERROR;
-        }
-        return G_CONVERTER_CONVERTED;
-        break;
-      }
-    }
-
-    if(partial2->len > 0)
-    {
-      g_set_error_literal
-      (error,
-       G_IO_ERROR,
-       G_IO_ERROR_PARTIAL_INPUT,
-       "Partial input\r\n");
-      g_string_erase(partial2, 0, partial2->len);
-      return G_CONVERTER_ERROR;
-    }
-
-    success =
-    write_partial(self, outbuf, n_outbuf, n_outbuf_wrote, &tmp_err);
-    if G_UNLIKELY(tmp_err != NULL)
-    {
-      g_propagate_error(error, tmp_err);
-      return G_CONVERTER_ERROR;
-    }
-  }
-
-_error_:
-  return
-  (flags & G_CONVERTER_INPUT_AT_END)
-  ? G_CONVERTER_FINISHED
-  : G_CONVERTER_CONVERTED;
-}
-
 static GConverterResult
 dda_morse_converter_g_converter_iface_convert(GConverter       *pself,
                                               gconstpointer     inbuf,
@@ -509,6 +99,23 @@ dda_morse_converter_g_converter_iface_convert(GConverter       *pself,
   const gchar *input, *last;
   gunichar unichar;
 
+  if G_UNLIKELY(self->charset == NULL)
+  {
+    g_set_error_literal
+    (error,
+     G_IO_ERROR,
+     G_IO_ERROR_NOT_INITIALIZED,
+     "Install a charset first");
+    g_warning
+    ("Install a charset first\r\n");
+    return G_CONVERTER_ERROR;
+  }
+
+/*
+ * Do some work
+ *
+ */
+
 #define step() \
   return self->conversor(self, inbuf, n_inbuf, outbuf, n_outbuf, flags, n_inbuf_read, n_outbuf_wrote, error);
 
@@ -523,7 +130,7 @@ dda_morse_converter_g_converter_iface_convert(GConverter       *pself,
       (error,
        DDA_MORSE_CONVERTER_ERROR,
        DDA_MORSE_CONVERTER_ERROR_UNGUESSABLE_INPUT,
-       "Input too short to guess format\r\n");
+       "Input too short to guess format");
       goto_error();
     }
     else
@@ -534,9 +141,9 @@ dda_morse_converter_g_converter_iface_convert(GConverter       *pself,
       {
         g_set_error_literal
         (error,
-         DDA_MORSE_CONVERTER_ERROR,
-         DDA_MORSE_CONVERTER_ERROR_NOT_UTF8_INPUT,
-         "Invalid input data (not UTF-8 sequence)\r\n");
+         G_IO_ERROR,
+         G_IO_ERROR_INVALID_DATA,
+         "Invalid input data (not a UTF-8 sequence)");
         return G_CONVERTER_ERROR;
       }
 
@@ -550,12 +157,12 @@ dda_morse_converter_g_converter_iface_convert(GConverter       *pself,
            || unichar == L','
            || unichar == L' '))
         {
-          self->conversor = conversor_char2code;
+          self->conversor = _dda_morse_conversor_char2code;
           step();
         }
       }
 
-      self->conversor = conversor_code2char;
+      self->conversor = _dda_morse_conversor_code2char;
       step();
     }
   }
@@ -584,17 +191,18 @@ dda_morse_converter_g_converter_iface_reset(GConverter* pself)
   }
 
   g_string_erase(self->partial, 0, self->partial->len);
+  g_string_erase(self->partial2, 0, self->partial2->len);
 
-  switch(self->direction_default)
+  switch(self->direction)
   {
   case DDA_MORSE_CONVERTER_DIRECTION_NONE:
     self->conversor = NULL;
     break;
   case DDA_MORSE_CONVERTER_DIRECTION_CODE2CHAR:
-    self->conversor = conversor_code2char;
+    self->conversor = _dda_morse_conversor_code2char;
     break;
   case DDA_MORSE_CONVERTER_DIRECTION_CHAR2CODE:
-    self->conversor = conversor_char2code;
+    self->conversor = _dda_morse_conversor_char2code;
     break;
   }
 }
@@ -614,10 +222,10 @@ dda_morse_converter_class_set_property(GObject* pself, guint prop_id, const GVal
   switch(prop_id)
   {
   case prop_direction:
-    self->direction_default = g_value_get_enum(value);
+    self->direction = g_value_get_enum(value);
     break;
   case prop_charset:
-    g_set_object(&(self->charset), g_value_get_object(value));
+    dda_morse_converter_set_charset(self, g_value_get_object(value));
     break;
   case prop_suppress_unknown_code_error:
     self->suppress_unknown_code_error = g_value_get_boolean(value);
@@ -774,4 +382,11 @@ dda_morse_converter_new(DdaMorseConverterDirection direction,
    NULL);
 }
 
-
+void
+dda_morse_converter_set_charset(DdaMorseConverter  *converter,
+                                DdaMorseCharset    *charset)
+{
+  g_return_if_fail(DDA_IS_MORSE_CONVERTER(converter));
+  g_return_if_fail(DDA_IS_MORSE_CHARSET(charset) || charset == NULL);
+  g_set_object(&(converter->charset), charset);
+}

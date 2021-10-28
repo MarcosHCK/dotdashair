@@ -21,6 +21,22 @@ namespace Dda
   [GtkTemplate (ui = "/org/hck/dotdashair/ui/window.ui")]
   public class Window : Gtk.Window
   {
+    [GtkChild]
+    private Dda.Textbox inbox;
+    [GtkChild]
+    private Dda.Textbox outbox;
+
+    private Dda.Morse.Charset _charset = null;
+    public Dda.Morse.Charset charset
+    {get {
+      return this._charset;
+      }
+     set {
+      inbox.charset = value;
+      outbox.charset = value;
+      this._charset = value;
+      }}
+
     [GtkCallback]
     private bool on_delete_event(Gtk.Widget widget, Gdk.EventAny event)
     {

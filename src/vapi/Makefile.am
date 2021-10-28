@@ -35,4 +35,6 @@ VOID=
 
 EXTRA_DIST+=\
   config.vapi \
+  dda-override.vapi \
+  dda.vapi \
   $(VOID)

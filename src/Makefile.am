@@ -51,7 +51,10 @@ EXTRA_DIST+=\
 	dda_macros.h \
 	dda_morse_charset.h \
 	dda_morse_converter.h \
+	dda_morse_converter_private.h \
 	dda_output_stream.h \
+	dda_override.h \
+	dda_settings.h \
 	$(VOID)
 
 #
@@ -65,6 +68,8 @@ libddagio_la_SOURCES=\
 	dda_input_stream.c \
 	dda_morse_charset.c \
 	dda_morse_converter.c \
+	dda_morse_converter_ch2co.c \
+	dda_morse_converter_co2ch.c \
 	dda_output_stream.c \
 	$(VOID)
 libddagio_la_CFLAGS=\
@@ -101,6 +106,7 @@ dotdashair_SOURCES=\
 	dda_application.c \
 	dda_main.c \
 	dda_settings.vala \
+	dda_textbox.vala \
 	dda_window.vala \
 	$(VOID)
 dotdashair_CFLAGS=\
@@ -118,24 +124,13 @@ dotdashair_LDADD=\
 # Vala
 #
 
-VALA_PKG=\
-	gio-2.0 \
-	glib-2.0 \
-	gobject-2.0 \
-	gtk+-3.0 \
-	$(VOID)
-
-VALA_VAPIS=\
-	config \
-	$(VOID)
-
 AM_VALAFLAGS=\
 	--vapidir=vapi/ \
 	--hide-internal \
 	--abi-stability \
+	--pkg config \
+	--pkg dda \
 	-D DEBUG=${DEBUG} \
 	-D DEVELOPER=${DEVELOPER} \
 	--gresources "${top_builddir}/src/resources/dda_resources.gresources.xml" \
-	$(addprefix --pkg , ${VALA_PKG}) \
-	$(addprefix --pkg , ${VALA_VAPIS}) \
 	$(VOID)

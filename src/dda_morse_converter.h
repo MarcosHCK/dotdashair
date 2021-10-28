@@ -94,6 +94,9 @@ dda_morse_converter_direction_get_type ();
 GConverter*
 dda_morse_converter_new(DdaMorseConverterDirection direction,
                         DdaMorseCharset* charset);
+void
+dda_morse_converter_set_charset(DdaMorseConverter  *converter,
+                                DdaMorseCharset    *charset);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (DdaMorseConverter, g_object_unref)
 

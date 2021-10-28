@@ -180,7 +180,7 @@ dda_application_g_initable_iface_init_sync(GInitable* pself, GCancellable* cance
   }
 
   self->converter = converter = (DdaMorseConverter*)
-  dda_morse_converter_new(DDA_MORSE_CONVERTER_DIRECTION_CODE2CHAR, charset);
+  dda_morse_converter_new(DDA_MORSE_CONVERTER_DIRECTION_NONE, charset);
 
 /*
  * Icons
@@ -210,6 +210,8 @@ dda_application_g_initable_iface_init_sync(GInitable* pself, GCancellable* cance
     g_object_ref_sink(window);
     self->window = window;
   }
+
+  g_object_set(window, "charset", self->charset, NULL);
 
   gtk_window_set_application
   (GTK_WINDOW(window),
