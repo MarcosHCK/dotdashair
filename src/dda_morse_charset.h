@@ -87,9 +87,15 @@ struct _DdaMorseEntity
 };
 
 DdaMorseCharset*
-dda_morse_charset_new(GFile* charset_file, GCancellable* cancellable, GError** error);
+dda_morse_charset_new (GFile         *charset_file,
+                       GCancellable  *cancellable,
+                       GError       **error);
 const DdaMorseEntity*
-ds_morse_charset_get_entity_by_char (DdaMorseCharset* morse, DdaMorseChar char_);
+ds_morse_charset_get_entity_by_char (DdaMorseCharset *morse,
+                                     DdaMorseChar     char_);
+const DdaMorseEntity*
+ds_morse_charset_get_entity_by_code (DdaMorseCharset *morse,
+                                     DdaMorseCode     code);
 
 #if __cplusplus
 }

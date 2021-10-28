@@ -283,7 +283,7 @@ test_converter(DdaApplication* self, GCancellable* cancellable, GError** error)
   _g_object_unref0(stdout_);
 
   success =
-#if 0
+#if 1
   g_output_stream_printf(converter_, NULL, cancellable, &tmp_err, "marcos antonio");
 #else
   g_output_stream_printf(converter_, NULL, cancellable, &tmp_err, "--,.-,.-.,-.-.,---,..., ,.-,-.,-,---,-.,..,---");

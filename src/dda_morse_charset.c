@@ -26,6 +26,7 @@ G_DEFINE_QUARK(dda-morse-charset-error-quark,
 #define _g_key_file_unref0(var) ((var == NULL) ? NULL : (var = (g_key_file_unref (var), NULL)))
 #define _g_strfreev0(var)       ((var == NULL) ? NULL : (var = (g_strfreev (var), NULL)))
 #define _g_array_unref0(var)    ((var == NULL) ? NULL : (var = (g_array_unref (var), NULL)))
+#define _g_tree_unref0(var)     ((var == NULL) ? NULL : (var = (g_tree_unref (var), NULL)))
 
 static void
 dda_morse_charset_g_initable_iface_init(GInitableIface* iface);
@@ -45,6 +46,8 @@ struct _DdaMorseCharset
   GFile* charset_file;
   DdaMorseEntity* alphabet;
   guint n_alphabet;
+  GTree* code_tree; /* lookup code from char */
+  GTree* char_tree; /* lookup char from code */
 };
 
 struct _DdaMorseCharsetClass
@@ -69,6 +72,58 @@ G_DEFINE_TYPE_WITH_CODE
  G_IMPLEMENT_INTERFACE
  (G_TYPE_INITABLE,
   dda_morse_charset_g_initable_iface_init));
+
+static gboolean
+unichar_strcmp(gunichar* a_, gunichar* b_)
+{
+return (*a_) - (*b_);
+}
+
+static gboolean
+generate_code_tree(DdaMorseCharset* self, GError** error)
+{
+  gboolean success = TRUE;
+  GError* tmp_err = NULL;
+  GTree* tree = NULL;
+  guint i;
+
+  tree = g_tree_new((GCompareFunc) unichar_strcmp);
+
+  for(i = 0;
+      i < self->n_alphabet;
+      i++)
+  {
+    g_tree_insert(tree, (gpointer) &(self->alphabet[i].char_), GUINT_TO_POINTER(i));
+  }
+
+  self->code_tree = g_steal_pointer(&tree);
+_error_:
+  _g_tree_unref0(tree);
+return success;
+}
+
+static gboolean
+generate_char_tree(DdaMorseCharset* self, GError** error)
+{
+  gboolean success = TRUE;
+  GError* tmp_err = NULL;
+  GTree* tree = NULL;
+  guint i;
+
+  tree = g_tree_new((GCompareFunc) g_strcmp0);
+
+  for(i = 0;
+      i < self->n_alphabet;
+      i++)
+  {
+    g_tree_insert(tree, self->alphabet[i].code, GUINT_TO_POINTER(i));
+  }
+
+  self->char_tree = g_steal_pointer(&tree);
+_error_:
+  _g_tree_unref0(tree);
+return success;
+}
 
 static gboolean
 dda_morse_charset_g_initable_iface_init_sync(GInitable* pself, GCancellable* cancellable, GError** error)
@@ -125,16 +180,16 @@ dda_morse_charset_g_initable_iface_init_sync(GInitable* pself, GCancellable* can
   }
 
   entries =
-  g_array_sized_new(FALSE, TRUE, sizeof(DdaMorseEntity), n_chars);
+  g_array_sized_new(FALSE, TRUE, sizeof(DdaMorseEntity), n_chars + 1);
   G_STMT_START {
-    DdaMorseEntity entry =
+    DdaMorseEntity entity =
     {
       (DdaMorseChar) L' ',
       (DdaMorseCode)  " ",
       1,
     };
 
-    g_array_append_vals(entries, &entry, 1);
+    g_array_append_vals(entries, &entity, 1);
   } G_STMT_END;
 
   for(i = 0;
@@ -177,6 +232,27 @@ dda_morse_charset_g_initable_iface_init_sync(GInitable* pself, GCancellable* can
 
   self->alphabet = g_array_steal(entries, &n_value);
   self->n_alphabet = n_value;
+
+/*
+ * Generate trees
+ *
+ */
+
+  success =
+  generate_code_tree(self, &tmp_err);
+  if G_UNLIKELY(tmp_err != NULL)
+  {
+    g_propagate_error(error, tmp_err);
+    goto_error();
+  }
+
+  success =
+  generate_char_tree(self, &tmp_err);
+  if G_UNLIKELY(tmp_err != NULL)
+  {
+    g_propagate_error(error, tmp_err);
+    goto_error();
+  }
 
 _error_:
   _g_bytes_unref0(charset_bytes);
@@ -286,17 +362,30 @@ const DdaMorseEntity*
 ds_morse_charset_get_entity_by_char(DdaMorseCharset* morse, DdaMorseChar char_)
 {
   g_return_val_if_fail(DDA_IS_MORSE_CHARSET(morse), NULL);
-  DdaMorseEntity* alphabet = morse->alphabet;
-  guint i;
+  gpointer idx_ = NULL;
+  gboolean found;
 
-  for(i = 0;
-      i < morse->n_alphabet;
-      i++)
+  found =
+  g_tree_lookup_extended(morse->code_tree, &char_, NULL, &idx_);
+  if G_LIKELY(found == TRUE)
   {
-    if(alphabet[i].char_ == char_)
-    {
-      return &(alphabet[i]);
-    }
+    return morse->alphabet + GPOINTER_TO_UINT(idx_);
+  }
+return NULL;
+}
+
+const DdaMorseEntity*
+ds_morse_charset_get_entity_by_code(DdaMorseCharset* morse, DdaMorseCode code)
+{
+  g_return_val_if_fail(DDA_IS_MORSE_CHARSET(morse), NULL);
+  gpointer idx_ = NULL;
+  gboolean found;
+
+  found =
+  g_tree_lookup_extended(morse->char_tree, code, NULL, &idx_);
+  if G_LIKELY(found == TRUE)
+  {
+    return morse->alphabet + GPOINTER_TO_UINT(idx_);
   }
 return NULL;
 }
