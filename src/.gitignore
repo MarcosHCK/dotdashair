@@ -24,9 +24,11 @@
 *.Tpo
 
 dotdashair
+libddaaudio*.so*
 libddagio*.so*
 libmorse*.so*
 
 dda_settings.c
+dda_settings_window.c
 dda_textbox.c
 dda_window.c

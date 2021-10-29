@@ -20,6 +20,7 @@
 #include <dda_macros.h>
 #include <dda_morse_converter.h>
 #include <dda_settings.h>
+#include <dda_settings_windows.h>
 #include <dda_window.h>
 #include <gtk/gtk.h>
 #include <resources/dda_resources.h>
@@ -43,13 +44,13 @@ struct _DdaApplication
   /*<private>*/
   DdaSettings* dsettings;
   GSettings* gsettings;
-  GSettings* msettings;
 
   /*<private>*/
   DdaMorseCharset* charset;
   DdaMorseConverter* converter;
 
   /*<private>*/
+  DdaSettingsWindow* settings;
   DdaWindow* window;
 };
 
@@ -79,6 +80,7 @@ dda_application_g_initable_iface_init_sync(GInitable* pself, GCancellable* cance
   DdaMorseCharset* charset = NULL;
   DdaMorseConverter* converter = NULL;
   GdkPixbuf* pixbuf = NULL;
+  DdaSettingsWindow* settings = NULL;
   DdaWindow* window = NULL;
 
 /*
@@ -112,7 +114,7 @@ dda_application_g_initable_iface_init_sync(GInitable* pself, GCancellable* cance
   }
 
   gsettings =
-  dda_settings_get_settings(dsettings, GAPPNAME ".gui");
+  dda_settings_get_settings(dsettings, GAPPNAME);
   if G_UNLIKELY(gsettings == NULL)
   {
     g_set_error_literal
@@ -125,22 +127,6 @@ dda_application_g_initable_iface_init_sync(GInitable* pself, GCancellable* cance
   else
   {
     self->gsettings = gsettings;
-  }
-
-  msettings =
-  dda_settings_get_settings(dsettings, GAPPNAME ".morse");
-  if G_UNLIKELY(msettings == NULL)
-  {
-    g_set_error_literal
-    (error,
-     DDA_APPLICATION_ERROR,
-     DDA_APPLICATION_ERROR_GSETTINGS_INIT,
-     "dda_settings_get_settings(): failed!\r\n");
-    goto_error();
-  }
-  else
-  {
-    self->msettings = msettings;
   }
 
 /*
@@ -199,9 +185,17 @@ dda_application_g_initable_iface_init_sync(GInitable* pself, GCancellable* cance
   g_object_unref(pixbuf);
 
 /*
- * Main window
+ * GUI
  *
  */
+
+  settings =
+  dda_settings_window_new();
+  if G_LIKELY(settings != NULL)
+  {
+    g_object_ref_sink(settings);
+    self->settings = settings;
+  }
 
   window =
   dda_window_new();
@@ -211,7 +205,22 @@ dda_application_g_initable_iface_init_sync(GInitable* pself, GCancellable* cance
     self->window = window;
   }
 
-  g_object_set(window, "charset", self->charset, NULL);
+  g_signal_connect
+  (settings,
+   "delete-event",
+   G_CALLBACK
+   (gtk_widget_hide_on_delete),
+   NULL);
+  g_object_set
+  (window,
+   "settings-window", settings,
+   "charset", charset,
+   NULL);
+
+  g_settings_bind(gsettings,  "words-peer-minute", settings,  "words-peer-minute", G_SETTINGS_BIND_DEFAULT);
+  g_settings_bind(gsettings, "length-sensitivity", settings, "length-sensitivity", G_SETTINGS_BIND_DEFAULT);
+  g_settings_bind(gsettings, "volume-sensitivity", settings, "volume-sensitivity", G_SETTINGS_BIND_DEFAULT);
+  g_settings_bind(gsettings,     "beep-frequency", settings,     "beep-frequency", G_SETTINGS_BIND_DEFAULT);
 
   gtk_window_set_application
   (GTK_WINDOW(window),
@@ -296,9 +305,9 @@ dda_application_class_dispose(GObject* pself)
   DdaApplication* self = DDA_APPLICATION(pself);
   g_clear_object(&(self->dsettings));
   g_clear_object(&(self->gsettings));
-  g_clear_object(&(self->msettings));
   g_clear_object(&(self->charset));
   g_clear_object(&(self->converter));
+  g_clear_object(&(self->settings));
   g_clear_object(&(self->window));
 G_OBJECT_CLASS(dda_application_parent_class)->dispose(pself);
 }

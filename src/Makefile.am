@@ -55,34 +55,58 @@ EXTRA_DIST+=\
 	dda_output_stream.h \
 	dda_override.h \
 	dda_settings.h \
+	dda_settings_window.h \
 	$(VOID)
 
 #
 # Binaries and libraries
 #
 
-pkglib_LTLIBRARIES=libddagio.la
+pkglib_LTLIBRARIES=libddagio.la libddaaudio.la
 bin_PROGRAMS=dotdashair
 
-libddagio_la_SOURCES=\
+libddaaudio_la_SOURCES=\
 	dda_input_stream.c \
-	dda_morse_charset.c \
-	dda_morse_converter.c \
-	dda_morse_converter_ch2co.c \
-	dda_morse_converter_co2ch.c \
 	dda_output_stream.c \
 	$(VOID)
-libddagio_la_CFLAGS=\
+libddaaudio_la_CFLAGS=\
 	$(CGLM_CFLAGS) \
 	$(GIO_CFLAGS) \
 	$(GLIB_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
-	-DLOCALEDIR=\"${localedir}\" \
-	-DSCHEMASDIR=\"${schemasdir}\" \
+	$(PORTAUDIO_CFLAGS) \
 	-DTOPBUILDDIR=\"${top_builddir}\" \
-	-DGAPPNAME=\"org.hck.${PACKAGE_NAME}\" \
-	-DGETTEXT_PACKAGE=\"${GETTEXT_PACKAGE}\" \
-	-DGRESNAME=\"/org/hck/${PACKAGE_NAME}\" \
+	-D__DDA_AUDIO_INSIDE__=1 \
+	-fstack-protector-strong \
+	-funwind-tables \
+	-Winline \
+	-Wpacked \
+	-Wimplicit-fallthrough \
+	$(VOID)
+libddaaudio_la_LIBADD=\
+	$(CGLM_LIBS) \
+	$(GIO_LIBS) \
+	$(GLIB_LIBS) \
+	$(GOBJECT_LIBS) \
+	$(PORTAUDIO_LIBS) \
+	$(VOID)
+libddaaudio_la_LDFLAGS=\
+	-rpath ${pkglibdir} \
+	-release ${PACKAGE_RELEASE} \
+	-version-info ${PACKAGE_VERSION_MAYOR}:${PACKAGE_VERSION_MINOR}:${PACKAGE_VERSION_MICRO} \
+	$(VOID)
+
+libddagio_la_SOURCES=\
+	dda_morse_charset.c \
+	dda_morse_converter.c \
+	dda_morse_converter_ch2co.c \
+	dda_morse_converter_co2ch.c \
+	$(VOID)
+libddagio_la_CFLAGS=\
+	$(GIO_CFLAGS) \
+	$(GLIB_CFLAGS) \
+	$(GOBJECT_CFLAGS) \
+	-DTOPBUILDDIR=\"${top_builddir}\" \
 	-D__DDA_GIO_INSIDE__=1 \
 	-fstack-protector-strong \
 	-funwind-tables \
@@ -91,7 +115,6 @@ libddagio_la_CFLAGS=\
 	-Wimplicit-fallthrough \
 	$(VOID)
 libddagio_la_LIBADD=\
-	$(CGLM_LIBS) \
 	$(GIO_LIBS) \
 	$(GLIB_LIBS) \
 	$(GOBJECT_LIBS) \
@@ -106,17 +129,30 @@ dotdashair_SOURCES=\
 	dda_application.c \
 	dda_main.c \
 	dda_settings.vala \
+	dda_settings_window.vala \
 	dda_textbox.vala \
 	dda_window.vala \
 	$(VOID)
 dotdashair_CFLAGS=\
-	$(libddagio_la_CFLAGS) \
+	$(GIO_CFLAGS) \
+	$(GLIB_CFLAGS) \
+	$(GOBJECT_CFLAGS) \
+	$(GTK_CLAGS) \
+	-DLOCALEDIR=\"${localedir}\" \
+	-DSCHEMASDIR=\"${schemasdir}\" \
+	-DGAPPNAME=\"org.hck.${PACKAGE_NAME}\" \
+	-DGETTEXT_PACKAGE=\"${GETTEXT_PACKAGE}\" \
+	-DGRESNAME=\"/org/hck/${PACKAGE_NAME}\" \
+	-D__DDA_GUI_INSIDE__=1 \
 	$(GTK_CFLAGS) \
 	$(VOID)
 dotdashair_LDADD=\
-	$(libddagio_la_LIBADD) \
+	$(GIO_LIBS) \
+	$(GLIB_LIBS) \
+	$(GOBJECT_LIBS) \
 	$(GTK_LIBS) \
 	resources/libbundle.la \
+	libddaaudio.la \
 	libddagio.la \
 	$(VOID)
 

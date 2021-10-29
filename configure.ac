@@ -180,6 +180,7 @@ PKG_CHECK_MODULES([GIO], [gio-2.0])
 PKG_CHECK_MODULES([GLIB], [glib-2.0])
 PKG_CHECK_MODULES([GOBJECT], [gobject-2.0])
 PKG_CHECK_MODULES([GTK], [gtk+-3.0])
+PKG_CHECK_MODULES([PORTAUDIO], [portaudio-2.0])
 
 #
 # Check for libraries

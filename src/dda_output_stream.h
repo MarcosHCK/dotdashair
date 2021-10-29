@@ -19,6 +19,16 @@
 #define __DDA_OUTPUT_STREAM__ 1
 #include <gio/gio.h>
 
+#define DDA_TYPE_OUTPUT_STREAM            (dda_output_stream_get_type ())
+#define DDA_OUTPUT_STREAM(object)         (G_TYPE_CHECK_INSTANCE_CAST ((object), DDA_TYPE_OUTPUT_STREAM, DdaOutputStream))
+#define DDA_OUTPUT_STREAM_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), DDA_TYPE_OUTPUT_STREAM, DdaOutputStreamClass))
+#define DDA_IS_OUTPUT_STREAM(object)      (G_TYPE_CHECK_INSTANCE_TYPE ((object), DDA_TYPE_OUTPUT_STREAM))
+#define DDA_IS_OUTPUT_STREAM_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), DDA_TYPE_OUTPUT_STREAM))
+#define DDA_OUTPUT_STREAM_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), DDA_TYPE_OUTPUT_STREAM, DdaOutputStreamClass))
+
+typedef struct _DdaOutputStream       DdaOutputStream;
+typedef struct _DdaOutputStreamClass  DdaOutputStreamClass;
+
 #if __cplusplus
 extern "C" {
 #endif // __cplusplus
@@ -26,7 +36,7 @@ extern "C" {
 GType
 dda_output_stream_get_type ();
 
-//G_DEFINE_AUTOPTR_CLEANUP_FUNC (DdaOutputStream, g_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (DdaOutputStream, g_object_unref)
 
 #if __cplusplus
 }

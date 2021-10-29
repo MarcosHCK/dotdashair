@@ -17,3 +17,51 @@
  */
 #include <config.h>
 #include <dda_output_stream.h>
+
+/*
+ * Object definition
+ *
+ */
+
+struct _DdaOutputStream
+{
+  GOutputStream parent_instance;
+};
+
+struct _DdaOutputStreamClass
+{
+  GOutputStreamClass parent_class;
+};
+
+G_DEFINE_TYPE_WITH_CODE
+(DdaOutputStream,
+ dda_output_stream,
+ G_TYPE_OUTPUT_STREAM,);
+
+static void
+dda_output_stream_class_finalize(GObject* pself)
+{
+  DdaOutputStream* self = DDA_OUTPUT_STREAM(pself);
+G_OBJECT_CLASS(dda_output_stream_parent_class)->finalize(pself);
+}
+
+static void
+dda_output_stream_class_dispose(GObject* pself)
+{
+  DdaOutputStream* self = DDA_OUTPUT_STREAM(pself);
+G_OBJECT_CLASS(dda_output_stream_parent_class)->dispose(pself);
+}
+
+static void
+dda_output_stream_class_init(DdaOutputStreamClass* klass)
+{
+  GObjectClass* oclass = G_OBJECT_CLASS(klass);
+
+  oclass->finalize = dda_output_stream_class_finalize;
+  oclass->dispose = dda_output_stream_class_dispose;
+}
+
+static void
+dda_output_stream_init(DdaOutputStream* self)
+{
+}
