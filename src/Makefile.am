@@ -47,6 +47,7 @@ SUBDIRS=\
 
 EXTRA_DIST+=\
 	dda_application.h \
+	dda_backend.h \
 	dda_input_stream.h \
 	dda_macros.h \
 	dda_morse_charset.h \
@@ -56,6 +57,8 @@ EXTRA_DIST+=\
 	dda_override.h \
 	dda_settings.h \
 	dda_settings_window.h \
+	dda_streams.h \
+	dda_window.h \
 	$(VOID)
 
 #
@@ -66,8 +69,8 @@ pkglib_LTLIBRARIES=libddagio.la libddaaudio.la
 bin_PROGRAMS=dotdashair
 
 libddaaudio_la_SOURCES=\
-	dda_input_stream.c \
-	dda_output_stream.c \
+	dda_backend.vala \
+	dda_streams.vala \
 	$(VOID)
 libddaaudio_la_CFLAGS=\
 	$(CGLM_CFLAGS) \

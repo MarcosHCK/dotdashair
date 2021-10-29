@@ -15,5 +15,12 @@
  *  along with dotdashair.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#include <config.h>
-#include <dda_input_stream.h>
+#ifndef __DDA_STREAMS__
+#define __DDA_STREAMS__ 1
+#include <gio/gio.h>
+
+G_BEGIN_DECLS
+
+G_END_DECLS
+
+#endif // __DDA_STREAMS__
