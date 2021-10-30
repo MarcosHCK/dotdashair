@@ -29,6 +29,7 @@ libddagio*.so*
 libmorse*.so*
 
 dda_backend.c
+dda_infobar.c
 dda_settings.c
 dda_settings_window.c
 dda_streams.c

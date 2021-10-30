@@ -232,6 +232,18 @@ on_changed_output_device(DdaSettingsWindow* settings, GParamSpec* pspec, DdaAppl
   }
 }
 
+static void
+on_changed_state(DdaTextbox* textbox, DdaApplication* self)
+{
+  gboolean playing, pause;
+
+  g_object_get
+  (textbox,
+   "playing", &playing,
+   "pause", &pause,
+   NULL);
+}
+
 static gboolean
 dda_application_g_initable_iface_init_sync(GInitable* pself, GCancellable* cancellable, GError** error)
 {
@@ -401,8 +413,10 @@ dda_application_g_initable_iface_init_sync(GInitable* pself, GCancellable* cance
   g_object_set
   (window,
    "settings-window", settings,
-   "charset", charset,
    NULL);
+
+  dda_textbox_set_charset(window->inbox, charset);
+  dda_textbox_set_charset(window->outbox, charset);
 
   g_settings_bind(gsettings,  "words-peer-minute", settings,  "words-peer-minute", G_SETTINGS_BIND_DEFAULT);
   g_settings_bind(gsettings, "length-sensitivity", settings, "length-sensitivity", G_SETTINGS_BIND_DEFAULT);
@@ -459,6 +473,16 @@ dda_application_g_initable_iface_init_sync(GInitable* pself, GCancellable* cance
   (settings,
    "notify::output-device",
    G_CALLBACK(on_changed_output_device),
+   self);
+  g_signal_connect
+  (window->inbox,
+   "changed-state",
+   G_CALLBACK(on_changed_state),
+   self);
+  g_signal_connect
+  (window->outbox,
+   "changed-state",
+   G_CALLBACK(on_changed_state),
    self);
 
   G_STMT_START {

@@ -39,6 +39,7 @@ RES_RESOURCES=\
 
 UI_RESOURCES=\
 	ui/settings.ui \
+	ui/infobar.ui \
 	ui/textbox.ui \
   ui/window.ui \
 	$(VOID)

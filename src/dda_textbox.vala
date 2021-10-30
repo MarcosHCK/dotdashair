@@ -22,11 +22,13 @@ namespace Dda
   public class Textbox : Gtk.Grid
   {
     [GtkChild]
+    private Dda.InfoBar infobar1;
+    [GtkChild]
     private Gtk.Label frame_label;
     [GtkChild]
-    private Gtk.TextBuffer textbuffer1;
-    [GtkChild]
     private Gtk.Revealer revealer1;
+    [GtkChild]
+    private Gtk.TextBuffer textbuffer1;
     [GtkChild]
     private Gtk.ToggleButton toggle1;
     private Dda.Morse.Converter converter = null;
@@ -71,6 +73,7 @@ namespace Dda
      set {
       revealer1.set_reveal_child(value);
       this._playing = value;
+      this.changed_state();
       }}
     public bool pause
     {get {
@@ -78,7 +81,15 @@ namespace Dda
       }
      set {
       toggle1.active = value;
+      this.changed_state();
       }}
+
+  /*
+   * Signal
+   *
+   */
+
+    public signal void changed_state();
 
   /*
    * Callbacks
@@ -100,7 +111,7 @@ namespace Dda
       }
       catch(GLib.Error e)
       {
-        critical(@"$(e.domain): $(e.code): $(e.message)\r\n");
+        infobar1.critical(@"$(e.domain): $(e.code): $(e.message)\r\n");
       }
     }
 

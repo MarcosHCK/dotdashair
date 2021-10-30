@@ -17,6 +17,7 @@
  */
 #ifndef __DDA_WINDOW__
 #define __DDA_WINDOW__
+#include <dda_textbox.h>
 #include <gtk/gtk.h>
 
 #define DDA_TYPE_WINDOW             (dda_window_get_type ())
@@ -26,8 +27,9 @@
 #define DDA_IS_WINDOW_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), DDA_TYPE_WINDOW))
 #define DDA_WINDOW_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), DDA_TYPE_WINDOW, DdaWindowClass))
 
-typedef struct _DdaWindow       DdaWindow;
-typedef struct _DdaWindowClass  DdaWindowClass;
+typedef struct _DdaWindow         DdaWindow;
+typedef struct _DdaWindowPrivate  DdaWindowPrivate;
+typedef struct _DdaWindowClass    DdaWindowClass;
 
 #if __cplusplus
 extern "C" {
@@ -35,6 +37,19 @@ extern "C" {
 
 GType
 dda_window_get_type ();
+
+struct _DdaWindow
+{
+  GtkWindow parent_instance;
+  DdaTextbox* inbox;
+  DdaTextbox* outbox;
+  DdaWindowPrivate* priv;
+};
+
+struct _DdaWindowClass
+{
+  GtkWindowClass parent_class;
+};
 
 DdaWindow*
 dda_window_new (void);

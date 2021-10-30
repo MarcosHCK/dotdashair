@@ -129,6 +129,7 @@ libddagio_la_LDFLAGS=\
 dotdashair_SOURCES=\
 	dda_application.c \
 	dda_main.c \
+	dda_infobar.vala \
 	dda_settings.vala \
 	dda_settings_window.vala \
 	dda_textbox.vala \

@@ -30,6 +30,29 @@ extern "C" {
   } G_STMT_END
 #define _g_object_unref0(var)     ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 
+static const
+gchar* _dda_infobar_style_classes[] =
+{
+  GTK_STYLE_CLASS_INFO,
+  GTK_STYLE_CLASS_WARNING,
+  GTK_STYLE_CLASS_QUESTION,
+  GTK_STYLE_CLASS_ERROR,
+};
+
+static inline const gchar*
+_dda_infobar_get_css_class()
+{
+  GtkWidgetClass* klass = NULL;
+  const gchar* klass_name = NULL;
+
+  klass =
+  g_type_class_ref(GTK_TYPE_INFO_BAR);
+  klass_name =
+  gtk_widget_class_get_css_name(klass);
+  g_type_class_unref(klass);
+return klass_name;
+}
+
 static inline gchar*
 _dda_textbox_convert(GConverter* converter, const gchar* text, gsize* size_p, GCancellable* cancellable, GError** error)
 {

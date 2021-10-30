@@ -22,9 +22,9 @@ namespace Dda
   public class Window : Gtk.Window
   {
     [GtkChild]
-    private Dda.Textbox inbox;
+    public Dda.Textbox inbox;
     [GtkChild]
-    private Dda.Textbox outbox;
+    public Dda.Textbox outbox;
 
     private Gtk.Window _settings_window = null;
     public Gtk.Window settings_window
@@ -41,16 +41,6 @@ namespace Dda
       }
      set {
       this._about_window = value;
-      }}
-    private Dda.Morse.Charset _charset = null;
-    public Dda.Morse.Charset charset
-    {get {
-      return this._charset;
-      }
-     set {
-      inbox.charset = value;
-      outbox.charset = value;
-      this._charset = value;
       }}
 
     [GtkCallback]

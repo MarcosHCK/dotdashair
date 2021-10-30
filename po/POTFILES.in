@@ -1,3 +1,6 @@
 # List of source files which contain translatable strings.
+src/resources/ui/settings.ui
+src/resources/ui/textbox.ui
 src/resources/ui/window.ui
+src/dda_textbox.vala
 src/dda_window.vala
