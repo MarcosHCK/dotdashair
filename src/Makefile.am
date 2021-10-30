@@ -37,6 +37,7 @@ VOID=
 #
 
 SUBDIRS=\
+	portaudio \
 	resources \
 	vapi \
 	$(VOID)
@@ -73,11 +74,9 @@ libddaaudio_la_SOURCES=\
 	dda_streams.vala \
 	$(VOID)
 libddaaudio_la_CFLAGS=\
-	$(CGLM_CFLAGS) \
 	$(GIO_CFLAGS) \
 	$(GLIB_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
-	$(PORTAUDIO_CFLAGS) \
 	-DTOPBUILDDIR=\"${top_builddir}\" \
 	-D__DDA_AUDIO_INSIDE__=1 \
 	-fstack-protector-strong \
@@ -87,11 +86,10 @@ libddaaudio_la_CFLAGS=\
 	-Wimplicit-fallthrough \
 	$(VOID)
 libddaaudio_la_LIBADD=\
-	$(CGLM_LIBS) \
 	$(GIO_LIBS) \
 	$(GLIB_LIBS) \
 	$(GOBJECT_LIBS) \
-	$(PORTAUDIO_LIBS) \
+	portaudio/libpabackend.la \
 	$(VOID)
 libddaaudio_la_LDFLAGS=\
 	-rpath ${pkglibdir} \

@@ -208,6 +208,7 @@ AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([
 Makefile
 src/Makefile
+src/portaudio/Makefile
 src/resources/Makefile
 src/vapi/Makefile
 settings/Makefile

@@ -30,6 +30,10 @@ namespace Dda
     [GtkChild]
     private Gtk.Adjustment adjustment4;
     [GtkChild]
+    private Gtk.ComboBox combobox1;
+    [GtkChild]
+    private Gtk.ComboBox combobox2;
+    [GtkChild]
     private Gtk.ListStore liststore1;
     [GtkChild]
     private Gtk.ListStore liststore2;
@@ -75,6 +79,61 @@ namespace Dda
     {get {
       return liststore2;
       }}
+    public unowned string input_device
+    {get {
+      return combobox1.get_active_id();
+      }
+     set {
+      combobox1.set_active_id(value);
+      }}
+    public unowned string output_device
+    {get {
+      return combobox2.get_active_id();
+      }
+     set {
+      combobox2.set_active_id(value);
+      }}
+
+  /*
+   * Callbacks
+   *
+   */
+
+    [GtkCallback]
+    private void on_adjustment1_value_changed(Gtk.Adjustment adjustment)
+    {
+      ((GLib.Object) this).notify_property("words-peer-minute");
+    }
+
+    [GtkCallback]
+    private void on_adjustment2_value_changed(Gtk.Adjustment adjustment)
+    {
+      ((GLib.Object) this).notify_property("length-sensitivity");
+    }
+
+    [GtkCallback]
+    private void on_adjustment3_value_changed(Gtk.Adjustment adjustment)
+    {
+      ((GLib.Object) this).notify_property("volume-sensitivity");
+    }
+
+    [GtkCallback]
+    private void on_adjustment4_value_changed(Gtk.Adjustment adjustment)
+    {
+      ((GLib.Object) this).notify_property("beep-frequency");
+    }
+
+    [GtkCallback]
+    private void on_combobox1_changed(Gtk.ComboBox combobox)
+    {
+      ((GLib.Object) this).notify_property("input-device");
+    }
+
+    [GtkCallback]
+    private void on_combobox2_changed(Gtk.ComboBox combobox)
+    {
+      ((GLib.Object) this).notify_property("input-device");
+    }
 
   /*
    * Construction

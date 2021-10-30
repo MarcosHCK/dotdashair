@@ -24,8 +24,6 @@ namespace Dda
     [GtkChild]
     private Gtk.Label frame_label;
     [GtkChild]
-    private Gtk.TextView textview1;
-    [GtkChild]
     private Gtk.TextBuffer textbuffer1;
     [GtkChild]
     private Gtk.Revealer revealer1;

@@ -49,7 +49,7 @@ Author: MarcosHCK
             <property name="can-focus">True</property>
             <property name="shadow-type">in</property>
             <child>
-              <object class="GtkTextView" id="textview1">
+              <object class="GtkTextView">
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="buffer">textbuffer1</property>
