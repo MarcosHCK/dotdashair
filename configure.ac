@@ -80,6 +80,7 @@ AC_PROG_CXX
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
+AC_PROG_RANLIB
 AM_PROG_VALAC
 
 PKG_PROG_PKG_CONFIG
@@ -192,13 +193,19 @@ AC_CHECK_LIB([m], [pow])
 # Checks for header files.
 #
 
+AC_CHECK_HEADERS([float.h stdlib.h string.h])
+
 #
 # Checks for typedefs, structures, and compiler characteristics.
 #
 
+AC_C_INLINE
+
 #
 # Checks for library functions.
 #
+
+AC_CHECK_FUNCS([atexit setlocale])
 
 #
 # Prepare output

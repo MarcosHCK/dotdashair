@@ -20,6 +20,9 @@
 #include <pa_backend.h>
 #include <pa_backend_device.h>
 #include <pa_error.h>
+#ifdef HAVE_FLOAT_H
+# include <float.h>
+#endif
 #include <portaudio.h>
 
 static void
