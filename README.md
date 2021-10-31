@@ -2,7 +2,7 @@
 
 ---
 
-### Homepage
+Have you ever wanted to use Morse code for some reason? This program is for you.
 
 I am still working on that
 
